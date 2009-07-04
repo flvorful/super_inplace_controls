@@ -1,0 +1,15 @@
+SuperInPlaceControls: An Open Source Project by Flvorful
+===============
+Author: Jake Varghese (Flvorful.com)
+
+
+Inplace Controls for Rails 2.0
+
+Uses Time Harper's awesome CalendarDateSelect plugin for the inplace date selector.
+
+
+Docs for Flvorful::CustomHelpers
+
+Docs for Flvorful::InPlaceControls::ControllerMethods
+
+Docs for Flvorful::InPlaceControls::HelperMethods

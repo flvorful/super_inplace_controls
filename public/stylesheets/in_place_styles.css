@@ -1,0 +1,124 @@
+/* 
+		Default Styles for InPlace Controls 
+	 	Author: Jake Varghese (Flvorful)
+*/
+.inplace_loader img{
+	border:none !important;
+}
+.inplace_text_area{
+	height:100px;
+}
+.inplace_submit{
+	width:30px;
+	font-size:11px;
+}
+.inplace_text_field{
+	width:140px;
+}
+.in_place_editor_form input{
+	float: left;
+}
+.in_place_editor_form a{
+	float: left;
+}
+.calendar_date_select{
+	background:#fff;
+	width:207px !important;
+}
+.inplace_label{
+	font-weight: bold;
+}
+.inplace_div{
+	width:260px;
+	float: left;
+	display:block;
+	float:left;
+	padding-right:1em;
+	margin:3px;
+	padding:3px;
+}
+.inplace_radio{
+	width:15px;
+	height:15px;
+	margin:3px;
+	padding:3px;
+}
+.inplace_radio_label{
+	text-align: left;
+	width:100px;
+}
+.inplace_check_box_label{
+	text-align: left;
+}
+
+.inplace_cancel{
+	display: block;
+	width:30px;
+	height:25px;
+	margin-top:5px;
+	margin-left:10px;
+}
+
+.inplace_checkbox{
+	width:15px;
+	height:15px;
+	margin:0;
+	padding:0;
+	margin-top:6px;
+}
+
+.inplace_date_select{
+	width:150px;
+	font-size:10px;
+}
+.calendar_date_select_image{
+	display: block;
+	float: left;
+	width:auto;
+		margin:0 !important;
+	margin-right:10px !important;
+	margin-top:0px !important;
+}
+
+.in_place_editor_form br{
+	clear: left;
+}
+
+input.fieldWithError, select.fieldWithError, textarea.fieldWithError{
+	border: 1px solid red;
+}
+
+#error_messages{
+	width:45%;
+	background:#FECFCD;
+	color:red;
+	border: 2px solid red;
+		margin-bottom:20px;
+}
+
+#error_messages h2{
+	color:white;
+	font-weight:bold;
+	padding:3px;
+	background:red;
+	
+}
+
+#error_messages ul{
+	margin:0;
+	padding:10px;
+	margin-left:20px;
+}
+
+#inplace_test br{
+	clear: left;
+}
+
+.empty_inplace{
+	display:block;
+	width:30px;
+	height:15px;
+	margin:0;
+	padding:0;
+	float: left;
+}
