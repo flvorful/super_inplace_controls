@@ -1,6 +1,6 @@
 # Include hook code here
 
-%w[super_inplace_controls calendar_date_select includes_helper jrails_hacks.rb].each { |file| 
+%w[super_inplace_controls calendar_date_select includes_helper].each { |file| 
   require File.join( File.dirname(__FILE__), "lib", file) 
 }
 
@@ -14,4 +14,4 @@ ActionView::Base.send :include, Flvorful::CustomHelpers
 ActionView::Helpers::FormHelper.send :include, CalendarDateSelect::FormHelper
 ActionView::Base.send :include, CalendarDateSelect::FormHelper
 ActionView::Base.send :include, CalendarDateSelect::IncludesHelper
-ActionView::Base.send :include, Flvorful::Helpers::JavaScriptGenerator::GeneratorMethods
+ActionView::Helpers::JRailsConfig.use_google_cdn = true if defined?(ActionView::Helpers::JRailsConfig)

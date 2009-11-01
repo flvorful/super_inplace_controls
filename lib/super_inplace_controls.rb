@@ -44,8 +44,8 @@ module Flvorful
 		# 
 		# 
 
-
 		module ControllerMethods
+			
 			def in_place_edit_for(object, attribute, options = {}) 
 				define_method("set_#{object}_#{attribute}") do
 					setup_inplace_object(object, attribute, options)
@@ -61,14 +61,18 @@ module Flvorful
 			def jquery_enabled?
 				ActionView::Helpers::PrototypeHelper.const_defined?("JQUERY_VAR")
 			end
+			
 		end
 
 
 		module InstanceMethods
 			include ActionView::Helpers::TagHelper
-
+			def self.included(receiver)
+				
+			end
+			
 			def colorize(hex_code)
-				jquery_enabled? ? "'#{hex_code}'" : hex_code
+				jquery_enabled? ? "#{hex_code}" : hex_code
 			end
 
 			def jquery_enabled?
@@ -93,10 +97,7 @@ module Flvorful
 						end.join(", ")
 					else
 						methods = options[:final_text]
-						sum_of_methods = @item
-						methods.each do |meth|
-							sum_of_methods = sum_of_methods.send(meth)
-						end
+						methods.inject(@item) { |sum_of_methods, meth| sum_of_methods = sum_of_methods.send(meth)  }
 						@final_text = sum_of_methods
 					end
 					@final_text
@@ -118,18 +119,10 @@ module Flvorful
 				render :update do |page|
 					page.replace_html "#{@id_string}", @final_text
 					page.hide "#{@id_string}_form"
-					page << "if (document.getElementById('#{@error_messages}') != null) {"
-					page.hide @error_messages
-					page << "}"
-					if jquery_enabled?
-						page.remove_class_name ".fieldWithError", "fieldWithError"
-					else
-						page.select("##{@id_string}_form ##{@field_id}").map do |e| 
-							e.remove_class_name "fieldWithError" 
-						end
+					check_for_error_messages(page) do |page|
+						page.hide @error_messages
 					end
-					
-					page.show "#{@id_string}"
+					toggle_error_fields(:remove, page)
 					page.visual_effect :highlight, "#{@id_string}", :duration => 0.5, :endcolor => "#{@highlight_endcolor}", :startcolor => "#{@highlight_startcolor}"
 				end
 			end
@@ -138,19 +131,17 @@ module Flvorful
 				unless @error_messages.blank?
 					errors_html = render_errors_html
 					render :update do |page|
-						page.select("##{@id_string}_form ##{@field_id}").map do |e| 
-							e.add_class_name "fieldWithError" 
+						toggle_error_fields(:add, page)
+						check_for_error_messages(page) do |page|
+							page.replace_html @error_messages, errors_html
+							page.visual_effect @error_visual_effect, @error_messages
 						end
-						page.show "#{@id_string}_form"
-						page << "if (document.getElementById('#{@error_messages}') != null) {"
-						page.replace_html @error_messages, errors_html
-						page.visual_effect @error_visual_effect, @error_messages
-						page << "}"
 					end 
 				else
 					raise @item.errors.inspect
 				end
 			end
+			
 		end
 
 
@@ -171,6 +162,8 @@ module Flvorful
 			# By default the value of the object's attribute will be selected, or blank.
 			# Example:
 			#   <%= in_place_date_select :product, :display_begin_date %>
+			# Note*:  If you are using jQuery, you must have jquery-ui installed for the datepicker 
+			#   			to function properly.  Otherwise, nothing will happen.
 
 			def in_place_date_select(object, method, options = {})
 				options[:time] ||= false
@@ -238,6 +231,7 @@ module Flvorful
 				content_tag(:div, "", :id => div_id, :class => div_class, :style => "display:none")
 			end
 
+			
 			def jquery_calendar_picker( object_name, method_name, options )
 				ret = text_field(object_name, method_name, options )
 				ret << javascript_tag do
@@ -245,6 +239,21 @@ module Flvorful
 						page << "if (jQuery.isFunction(jQuery.fn.datepicker)) { jQuery('.inplace_date_select').datepicker() }"
 					end
 				end
+			end
+			
+			
+			# helpers for render
+			def toggle_error_fields(dir, page)
+				page.select("##{@id_string}_form ##{@field_id}").map do |e| 
+					dir == :add ? e.add_class_name("fieldWithError") : e.remove_class_name("fieldWithError") 
+				end
+				page.show(dir == :add ? "#{@id_string}_form" : "#{@id_string}")
+			end
+			
+			def check_for_error_messages(page)
+				page << "if (document.getElementById('#{@error_messages}') != null) {"
+				yield page
+				page << "}"
 			end
 
 
@@ -269,9 +278,12 @@ module Flvorful
 			end
 
 			def set_blank_text(text, number_of_spaces = 7)
-				blank = "&nbsp;" * number_of_spaces
-				text = blank if text.blank?
+				text = blank_text(number_of_spaces) if text.blank?
 				text
+			end
+			
+			def blank_text(number_of_spaces = 7)
+				blank = "&nbsp;" * number_of_spaces
 			end
 
 			def set_display_text(object, attribute, options)
@@ -312,7 +324,34 @@ module Flvorful
 				set_method = opts[:action] || "set_#{object_name}_#{method_name}"
 				save_button_text = opts[:save_button_text] || "OK"
 				loader_message = opts[:saving_text] || "Saving..."
-				retval << form_remote_tag(:url => { :action => set_method, :id => object.id },
+				retval << draw_form(set_method, object, id_string, opts)
+
+				retval << field_for_inplace_editing(object_name, method_name, object, opts, input_type )
+				retval << draw_break(opts)
+				retval << submit_tag( save_button_text, :class => "inplace_submit")
+				retval << cancel_link(id_string)
+				retval << end_form
+				retval << invisible_loader( loader_message, "loader_#{id_string}", "inplace_loader")
+				retval << content_tag(:br)
+			end
+			
+			def cancel_link(id_string)
+				link_to_function( "Cancel", update_page do |page|
+					page.show "#{id_string}"
+					page.hide "#{id_string}_form"
+				end, {:class => "inplace_cancel" })
+			end
+			
+			def draw_break(opts = {})
+				 opts[:br] ? content_tag(:br) : ""
+			end
+			
+			def end_form
+				"</form>"
+			end
+			
+			def draw_form(set_method, object, id_string, opts = {})
+				form_remote_tag(:url => { :action => set_method, :id => object.id },
 				:method => opts[:http_method] || :post,
 				:loading => update_page do |page|
 					page.show "loader_#{id_string}"
@@ -322,17 +361,6 @@ module Flvorful
 					page.hide "loader_#{id_string}"
 				end,
 				:html => {:class => "in_place_editor_form", :id => "#{id_string}_form", :style => "display:none" } )
-
-				retval << field_for_inplace_editing(object_name, method_name, object, opts, input_type )
-				retval << content_tag(:br) if opts[:br]
-				retval << submit_tag( save_button_text, :class => "inplace_submit")
-				retval << link_to_function( "Cancel", update_page do |page|
-					page.show "#{id_string}"
-					page.hide "#{id_string}_form"
-				end, {:class => "inplace_cancel" })
-				retval << "</form>"
-				retval << invisible_loader( loader_message, "loader_#{id_string}", "inplace_loader")
-				retval << content_tag(:br)
 			end
 
 			def field_for_inplace_editing(object_name, method_name,  object, options , input_type)
