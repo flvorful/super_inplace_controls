@@ -97,8 +97,7 @@ module Flvorful
 						end.join(", ")
 					else
 						methods = options[:final_text]
-						methods.inject(@item) { |sum_of_methods, meth| sum_of_methods = sum_of_methods.send(meth)  }
-						@final_text = sum_of_methods
+						@final_text = methods.inject(@item) { |sum_of_methods, meth| sum_of_methods = sum_of_methods.send(meth)  }
 					end
 					@final_text
 				else
